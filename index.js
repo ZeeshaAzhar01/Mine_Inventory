@@ -4,10 +4,9 @@ const app = express();
 
 const PORT = 3000;
 
-app.get("/api/health", (req, res) => {
+app.get("/api/about", (req, res) => {
     res.json({
-        success: true,
-        message: "Server is healthy"
+       project: "Backend Learning"
     });
 });
 
