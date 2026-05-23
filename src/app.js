@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 // routes
-const userRoutes = require("./src/routes/user.routes");
+const userRoutes = require("./routes/user.routes");
 
 app.use("/api/users", userRoutes);
 
