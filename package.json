@@ -1,12 +1,20 @@
 {
+  "name": "mining-inventory-api",
+  "version": "1.0.0",
+  "description": "Mining Inventory & Supply Chain Management API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^5.22.0",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "pg": "^8.21.0"
+    "express": "^5.2.1"
   },
   "devDependencies": {
+    "nodemon": "^3.1.0",
     "prisma": "^5.22.0"
   }
 }

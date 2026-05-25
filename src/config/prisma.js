@@ -1,17 +1,8 @@
-require('dotenv').config();
-const { PrismaClient } = require("@prisma/client");
-const { PrismaPg } = require("@prisma/adapter-pg");
-const { Pool } = require("pg");
+// Import the standard Prisma Client
+const { PrismaClient } = require('@prisma/client');
 
-// Create a native PostgreSQL pool using your .env url
-const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL 
-});
+// Initialize a new instance of the Prisma Client
+const prisma = new PrismaClient();
 
-// Wrap the pool in the Prisma Driver Adapter
-const adapter = new PrismaPg(pool);
-
-// Pass the adapter into the PrismaClient constructor
-const prisma = new PrismaClient({ adapter });
-
+// Export it so we can use it anywhere in our app (like in controllers or server.js)
 module.exports = prisma;
