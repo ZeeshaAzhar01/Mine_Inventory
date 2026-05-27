@@ -1,7 +1,9 @@
 // controllers/auth.controller.js
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const prisma = require('../prismaClient');
 
+// Controller function to handle user registration
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -46,6 +48,59 @@ const registerUser = async (req, res) => {
   }
 };
 
+// Controller function to handle user login
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // 1. Check if both email and password are provided
+        if (!email || !password) {
+            return res.status(400).json({ error: "Please provide email and password" });
+        }
+
+        // 2. Find the user in the database
+        const user = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (!user) {
+            return res.status(401).json({ error: "Invalid credentials" }); // 401 = Unauthorized
+        }
+
+        // 3. Compare the provided password with the hashed password in DB
+        const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        // 4. Generate the JWT (The "Wristband")
+        // Payload contains userId and role (crucial for Day 7 RBAC)
+        const token = jwt.sign(
+            { userId: user.id, role: user.role }, 
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+
+        // 5. Send the response
+        res.status(200).json({
+            message: "Login successful",
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Something went wrong during login" });
+    }
+};
+
 module.exports = {
-  registerUser
+  registerUser,
+  login
 };
