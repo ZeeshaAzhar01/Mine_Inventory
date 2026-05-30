@@ -19,3 +19,12 @@ model User {
   password_hash String
   role          Role   @default(ENGINEER)
 }
+
+model Supplier {
+  id           String   @id @default(uuid())
+  name         String
+  gst_number   String   @unique
+  contact_info String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}

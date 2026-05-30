@@ -14,5 +14,9 @@ const authRoutes = require("./routes/auth.routes");
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes); 
 
+//supplier routes
+const supplierRoutes = require('./routes/supplier.routes');
+app.use('/api/suppliers', supplierRoutes);
+
 // 4. Export the configured app
 module.exports = app;
