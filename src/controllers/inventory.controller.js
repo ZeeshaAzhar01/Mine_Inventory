@@ -31,14 +31,15 @@ const createItem = async (req, res) => {
 // READ: Get all inventory items (Logged-in Users)
 const getAllItems = async (req, res) => {
     try {
-        // We use 'include' to fetch the supplier data right alongside the item!
         const items = await prisma.inventoryItem.findMany({
             include: {
-                supplier: true 
+                supplier: true // This entirely prevents the N+1 problem!
             }
         });
+
         res.status(200).json(items);
     } catch (error) {
+        console.error("Error fetching items:", error);
         res.status(500).json({ error: "Failed to fetch items" });
     }
 };
