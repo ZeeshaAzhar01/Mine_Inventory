@@ -27,4 +27,21 @@ model Supplier {
   contact_info String
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
+  items        InventoryItem[]
+}
+
+model InventoryItem {
+  id          String   @id @default(uuid())
+  name        String
+  category    String
+  stock_qty   Int      @default(0)
+  unit_price  Float
+  gst_rate    Float
+
+  // Foreign Key linking back to Supplier
+  supplier_id String
+  supplier    Supplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 }
