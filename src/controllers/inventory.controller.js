@@ -31,13 +31,38 @@ const createItem = async (req, res) => {
 // READ: Get all inventory items (Logged-in Users)
 const getAllItems = async (req, res) => {
     try {
+        // 1. Extract query parameters with default values
+        // If the user doesn't provide them, default to page 1, 10 items per page
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        // 2. Calculate how many items to skip
+        // Example: If page = 2, limit = 10. Skip = (2 - 1) * 10 = 10 items skipped.
+        const skip = (page - 1) * limit;
+
+        // 3. Fetch the data using Prisma's take and skip
         const items = await prisma.inventoryItem.findMany({
+            skip: skip,
+            take: limit,
             include: {
-                supplier: true // This entirely prevents the N+1 problem!
+                supplier: true // Keep our Day 10 optimization!
             }
         });
 
-        res.status(200).json(items);
+        // 4. (Best Practice) Count total items so the frontend knows how many pages exist
+        const totalItems = await prisma.inventoryItem.count();
+        const totalPages = Math.ceil(totalItems / limit);
+
+        // 5. Send back a structured response
+        res.status(200).json({
+            data: items,
+            meta: {
+                totalItems,
+                totalPages,
+                currentPage: page,
+                itemsPerPage: limit
+            }
+        });
     } catch (error) {
         console.error("Error fetching items:", error);
         res.status(500).json({ error: "Failed to fetch items" });
