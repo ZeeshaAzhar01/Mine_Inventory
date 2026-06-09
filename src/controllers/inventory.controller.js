@@ -35,22 +35,44 @@ const getAllItems = async (req, res) => {
         // If the user doesn't provide them, default to page 1, 10 items per page
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';     // New: Text search
+        const category = req.query.category || ''; // New: Exact match filter
 
-        // 2. Calculate how many items to skip
+        //  Calculate how many items to skip
         // Example: If page = 2, limit = 10. Skip = (2 - 1) * 10 = 10 items skipped.
         const skip = (page - 1) * limit;
 
+        //  Build the dynamic filter conditions
+        const filterConditions = {};
+
+        if (search) {
+            // Prisma's version of SQL LIKE '%search%'
+            // 'insensitive' means "Liner" and "liner" will both match
+            filterConditions.name = {
+                contains: search,
+                mode: 'insensitive' 
+            };
+        }
+
+        if (category) {
+            // Exact match for category
+            filterConditions.category = category;
+        }
+
         // 3. Fetch the data using Prisma's take and skip
         const items = await prisma.inventoryItem.findMany({
+            where: filterConditions,
             skip: skip,
             take: limit,
             include: {
-                supplier: true // Keep our Day 10 optimization!
+                supplier: true 
             }
         });
 
-        // 4. (Best Practice) Count total items so the frontend knows how many pages exist
-        const totalItems = await prisma.inventoryItem.count();
+        // 4. Get the total count of items that match the filter (for pagination meta)
+        const totalItems = await prisma.inventoryItem.count({
+            where: filterConditions
+        });
         const totalPages = Math.ceil(totalItems / limit);
 
         // 5. Send back a structured response
@@ -60,7 +82,8 @@ const getAllItems = async (req, res) => {
                 totalItems,
                 totalPages,
                 currentPage: page,
-                itemsPerPage: limit
+                itemsPerPage: limit,
+                filtersApplied: { search, category }
             }
         });
     } catch (error) {
