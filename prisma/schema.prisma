@@ -35,6 +35,7 @@ model InventoryItem {
   name        String
   category    String
   stock_qty   Int      @default(0)
+  min_stock_threshold Int      @default(10)
   unit_price  Float
   gst_rate    Float
 

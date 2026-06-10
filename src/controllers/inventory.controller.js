@@ -92,7 +92,28 @@ const getAllItems = async (req, res) => {
     }
 };
 
+// Get low stock items for reordering
+const getLowStockItems = async (req, res) => {
+  try {
+    // We use a raw SQL query here to cleanly compare two columns in the same table
+    const lowStockItems = await prisma.$queryRaw`
+      SELECT * FROM "InventoryItem" 
+      WHERE stock_qty <= min_stock_threshold
+    `;
+
+    res.status(200).json({
+      success: true,
+      count: lowStockItems.length,
+      data: lowStockItems
+    });
+  } catch (error) {
+    console.error("Error fetching low stock items:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
     createItem,
-    getAllItems
+    getAllItems,
+    getLowStockItems
 };
