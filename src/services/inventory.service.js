@@ -25,7 +25,7 @@ const fetchAllItems = async (search, category, skip, take) => {
             take,
             include: { supplier: true } // The N+1 Fix
         }),
-        prisma.inventory_Item.count({ where })
+        prisma.inventoryItem.count({ where })
     ]);
 
     return { items, totalItems };
@@ -33,7 +33,7 @@ const fetchAllItems = async (search, category, skip, take) => {
 
 // 3. Create a New Item
 const createNewItem = async (itemData) => {
-    const newItem = await prisma.inventory_Item.create({
+    const newItem = await prisma.inventoryItem.create({
         data: itemData
     });
     return newItem;

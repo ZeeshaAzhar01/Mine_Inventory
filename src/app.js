@@ -22,5 +22,9 @@ app.use('/api/suppliers', supplierRoutes);
 const inventoryRoutes = require('./routes/inventory.routes');
 app.use('/api/items', inventoryRoutes);
 
+//purchase order routes
+const poRoutes = require('./routes/purchaseOrder.routes');
+app.use('/api/purchase-orders', poRoutes);
+
 // 4. Export the configured app
 module.exports = app;

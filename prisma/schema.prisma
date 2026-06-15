@@ -28,6 +28,7 @@ model Supplier {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   items        InventoryItem[]
+  purchase_orders PurchaseOrder[]
 }
 
 model InventoryItem {
@@ -45,4 +46,19 @@ model InventoryItem {
 
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+  purchase_orders PurchaseOrder[]
+}
+model PurchaseOrder {
+  id          String         @id @default(uuid())
+  qty         Int
+  base_price  Float          // Locks in the price at the time of purchase
+  itc_amount  Float?         // We will calculate this tomorrow on Day 16
+  created_at  DateTime       @default(now())
+  
+  // Relationships
+  supplier_id String
+  supplier    Supplier       @relation(fields: [supplier_id], references: [id])
+  
+  item_id     String
+  item        InventoryItem @relation(fields: [item_id], references: [id])
 }
