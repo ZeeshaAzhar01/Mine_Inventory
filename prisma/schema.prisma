@@ -49,16 +49,17 @@ model InventoryItem {
   purchase_orders PurchaseOrder[]
 }
 model PurchaseOrder {
-  id          String         @id @default(uuid())
-  qty         Int
-  base_price  Float          // Locks in the price at the time of purchase
-  itc_amount  Float?         // We will calculate this tomorrow on Day 16
-  created_at  DateTime       @default(now())
+  id           String         @id @default(uuid())
+  qty          Int
+  base_price   Float          // Price of a single unit at the time of purchase
+  subtotal     Float          // NEW: qty * base_price
+  itc_amount   Float          // UPDATED: The calculated GST tax amount
+  total_amount Float          // NEW: subtotal + itc_amount
+  created_at   DateTime       @default(now())
   
   // Relationships
-  supplier_id String
-  supplier    Supplier       @relation(fields: [supplier_id], references: [id])
-  
-  item_id     String
-  item        InventoryItem @relation(fields: [item_id], references: [id])
+  supplier_id  String
+  supplier     Supplier       @relation(fields: [supplier_id], references: [id])
+  item_id      String
+  item         InventoryItem @relation(fields: [item_id], references: [id])
 }
