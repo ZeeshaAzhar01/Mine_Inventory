@@ -77,7 +77,7 @@ const login = async (req, res) => {
         // 4. Generate the JWT (The "Wristband")
         // Payload contains userId and role (crucial for Day 7 RBAC)
         const token = jwt.sign(
-            { userId: user.id, role: user.role }, 
+            { id: user.id, role: user.role }, 
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN }
         );

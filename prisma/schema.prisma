@@ -18,6 +18,7 @@ model User {
   email         String @unique
   password_hash String
   role          Role   @default(ENGINEER)
+  requisitions Requisition[]
 }
 
 model Supplier {
@@ -47,6 +48,7 @@ model InventoryItem {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
   purchase_orders PurchaseOrder[]
+  requisitions Requisition[]
 }
 model PurchaseOrder {
   id           String         @id @default(uuid())
@@ -62,4 +64,23 @@ model PurchaseOrder {
   supplier     Supplier       @relation(fields: [supplier_id], references: [id])
   item_id      String
   item         InventoryItem @relation(fields: [item_id], references: [id])
+}
+enum RequisitionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Requisition {
+  id            String            @id @default(uuid())
+  qty_requested Int
+  status        RequisitionStatus @default(PENDING)
+  created_at    DateTime          @default(now())
+  
+  // Relationships
+  user_id       String
+  user          User              @relation(fields: [user_id], references: [id])
+  
+  item_id       String
+  item          InventoryItem     @relation(fields: [item_id], references: [id])
 }
