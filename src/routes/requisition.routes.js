@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const requisitionController = require('../controllers/requisition.controller');
-const { verifyToken } = require('../middleware/auth.middleware');
+const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
-// Both Engineers and Admins can submit requests
+// Engineers can request
 router.post('/', verifyToken, requisitionController.requestItems);
+
+// Only Admins can approve
+router.put('/:id/approve', verifyToken, isAdmin, requisitionController.approveRequest);
 
 module.exports = router;

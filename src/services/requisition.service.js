@@ -14,6 +14,43 @@ const createRequisition = async (userId, itemId, qtyRequested) => {
   return requisition;
 };
 
+const approveRequisition = async (requisitionId) => {
+  // We use Interactive Transactions to ensure Atomicity
+  const approvedRequisition = await prisma.$transaction(async (tx) => {
+    
+    // 1. Fetch the current requisition
+    const requisition = await tx.requisition.findUnique({
+      where: { id: requisitionId }
+    });
+
+    if (!requisition) {
+      throw new Error("Requisition not found");
+    }
+
+    if (requisition.status !== 'PENDING') {
+      throw new Error("Only PENDING requisitions can be approved");
+    }
+
+    // 2. Update the requisition status to APPROVED
+    const updatedReq = await tx.requisition.update({
+      where: { id: requisitionId },
+      data: { status: 'APPROVED' }
+    });
+
+    // 3. Deduct the requested quantity from the physical inventory
+    await tx.inventoryItem.update({
+      where: { id: requisition.item_id },
+      data: { stock_qty: { decrement: requisition.qty_requested } }
+    });
+
+    // If everything succeeds, the transaction commits!
+    return updatedReq;
+  });
+
+  return approvedRequisition;
+};
+
 module.exports = {
-  createRequisition
+  createRequisition,
+  approveRequisition
 };

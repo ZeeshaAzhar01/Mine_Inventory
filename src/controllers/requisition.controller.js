@@ -20,6 +20,26 @@ const requestItems = async (req, res) => {
   }
 };
 
+const approveRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Call the transaction service
+    const approvedData = await requisitionService.approveRequisition(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Requisition approved and stock deducted safely",
+      data: approvedData
+    });
+  } catch (error) {
+    console.error("Approval Error:", error);
+    // Return a 400 Bad Request if the status was already approved/rejected
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
-  requestItems
+  requestItems,
+  approveRequest
 };
