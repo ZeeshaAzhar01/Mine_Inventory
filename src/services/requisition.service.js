@@ -15,7 +15,6 @@ const createRequisition = async (userId, itemId, qtyRequested) => {
 };
 
 const approveRequisition = async (requisitionId) => {
-  // We use Interactive Transactions to ensure Atomicity
   const approvedRequisition = await prisma.$transaction(async (tx) => {
     
     // 1. Fetch the current requisition
@@ -31,19 +30,28 @@ const approveRequisition = async (requisitionId) => {
       throw new Error("Only PENDING requisitions can be approved");
     }
 
-    // 2. Update the requisition status to APPROVED
+    // 2. Fetch the current physical inventory item INSIDE the transaction
+    const item = await tx.inventoryItem.findUnique({
+      where: { id: requisition.item_id }
+    });
+
+    // 3. THE SAFETY NET: Check for insufficient stock
+    if (item.stock_qty < requisition.qty_requested) {
+      throw new Error(`Insufficient stock. You only have ${item.stock_qty} units available.`);
+    }
+
+    // 4. Update the requisition status to APPROVED
     const updatedReq = await tx.requisition.update({
       where: { id: requisitionId },
       data: { status: 'APPROVED' }
     });
 
-    // 3. Deduct the requested quantity from the physical inventory
+    // 5. Deduct the requested quantity safely
     await tx.inventoryItem.update({
       where: { id: requisition.item_id },
       data: { stock_qty: { decrement: requisition.qty_requested } }
     });
 
-    // If everything succeeds, the transaction commits!
     return updatedReq;
   });
 
