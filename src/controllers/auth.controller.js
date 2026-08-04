@@ -43,13 +43,12 @@ const registerUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Registration Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 };
 
 // Controller function to handle user login
-const login = async (req, res) => {
+const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
@@ -95,8 +94,7 @@ const login = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Something went wrong during login" });
+        next(error);
     }
 };
 

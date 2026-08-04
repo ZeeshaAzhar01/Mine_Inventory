@@ -1,7 +1,7 @@
 const reportService = require('../services/report.service');
 
 // GET /api/reports/monthly-spend
-const getMonthlySpendReport = async (req, res) => {
+const getMonthlySpendReport = async (req, res, next) => {
     try {
         const { year } = req.query;
 
@@ -16,11 +16,7 @@ const getMonthlySpendReport = async (req, res) => {
             data: reportData
         });
     } catch (error) {
-        console.error("Monthly Spend Report Error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to generate monthly spend report"
-        });
+        next(error);
     }
 };
 

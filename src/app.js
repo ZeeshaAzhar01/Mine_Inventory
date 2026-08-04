@@ -39,5 +39,15 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: "UP", message: "Mining Inventory API is healthy" });
 });
 
-// 4. Export the configured app
+// 4. Handle Unhandled Routes (404 Not Found)
+const AppError = require('./utils/AppError');
+app.use((req, res, next) => {
+    next(new AppError(`Cannot find route ${req.method} ${req.originalUrl} on this server`, 404));
+});
+
+// 5. Centralized Global Error Handler Middleware
+const errorHandler = require('./middleware/error.middleware');
+app.use(errorHandler);
+
+// 6. Export the configured app
 module.exports = app;

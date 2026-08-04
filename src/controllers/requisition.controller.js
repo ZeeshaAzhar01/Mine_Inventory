@@ -1,6 +1,6 @@
 const requisitionService = require('../services/requisition.service');
 
-const requestItems = async (req, res) => {
+const requestItems = async (req, res, next) => {
   try {
     const { item_id, qty } = req.body;
     
@@ -15,12 +15,11 @@ const requestItems = async (req, res) => {
       data: newRequisition
     });
   } catch (error) {
-    console.error("Requisition Error:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    next(error);
   }
 };
 
-const approveRequest = async (req, res) => {
+const approveRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -33,9 +32,11 @@ const approveRequest = async (req, res) => {
       data: approvedData
     });
   } catch (error) {
-    console.error("Approval Error:", error);
-    // Return a 400 Bad Request if the status was already approved/rejected
-    res.status(400).json({ success: false, message: error.message });
+    // Return a 400 Bad Request if the status was already approved/rejected or insufficient stock
+    if (error.message && (error.message.includes("Insufficient stock") || error.message.includes("Only PENDING"))) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    next(error);
   }
 };
 

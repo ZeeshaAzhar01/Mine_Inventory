@@ -1,14 +1,9 @@
 const prisma = require('../config/prisma');
 
 // CREATE: Add a new supplier
-const createSupplier = async (req, res) => {
+const createSupplier = async (req, res, next) => {
     try {
         const { name, gst_number, contact_info } = req.body;
-        
-        // Basic validation
-        if (!name || !gst_number) {
-            return res.status(400).json({ error: "Name and GST Number are required" });
-        }
 
         const supplier = await prisma.supplier.create({
             data: { name, gst_number, contact_info }
@@ -16,26 +11,22 @@ const createSupplier = async (req, res) => {
 
         res.status(201).json({ message: "Supplier created", supplier });
     } catch (error) {
-        // Handle unique constraint failure (e.g., duplicate GST)
-        if (error.code === 'P2002') {
-            return res.status(400).json({ error: "Supplier with this GST already exists" });
-        }
-        res.status(500).json({ error: "Something went wrong" });
+        next(error);
     }
 };
 
 // READ: Get all suppliers
-const getAllSuppliers = async (req, res) => {
+const getAllSuppliers = async (req, res, next) => {
     try {
         const suppliers = await prisma.supplier.findMany();
         res.status(200).json(suppliers);
     } catch (error) {
-        res.status(500).json({ error: "Something went wrong" });
+        next(error);
     }
 };
 
 // UPDATE: Modify a supplier
-const updateSupplier = async (req, res) => {
+const updateSupplier = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { name, gst_number, contact_info } = req.body;
@@ -47,12 +38,12 @@ const updateSupplier = async (req, res) => {
 
         res.status(200).json({ message: "Supplier updated", supplier: updatedSupplier });
     } catch (error) {
-        res.status(500).json({ error: "Failed to update supplier" });
+        next(error);
     }
 };
 
 // DELETE: Remove a supplier
-const deleteSupplier = async (req, res) => {
+const deleteSupplier = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -62,7 +53,7 @@ const deleteSupplier = async (req, res) => {
 
         res.status(200).json({ message: "Supplier deleted successfully" });
     } catch (error) {
-        res.status(500).json({ error: "Failed to delete supplier" });
+        next(error);
     }
 };
 
