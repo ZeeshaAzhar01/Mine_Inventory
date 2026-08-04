@@ -2,9 +2,13 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
+const validate = require('../middleware/validate.middleware');
+const { registerSchema, loginSchema } = require('../validators/auth.validator');
 
-// Map the POST request to the register controller function
-router.post('/register', authController.registerUser);
-// Map the POST request to the login controller function
-router.post('/login', authController.login);
+// Register endpoint with Zod schema validation
+router.post('/register', validate(registerSchema), authController.registerUser);
+
+// Login endpoint with Zod schema validation
+router.post('/login', validate(loginSchema), authController.login);
+
 module.exports = router;
