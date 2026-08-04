@@ -38,7 +38,44 @@ app.use('/api/requisitions', requisitionRoutes);
 const reportRoutes = require('./routes/report.routes');
 app.use('/api/reports', reportRoutes);
 
-// Health check endpoint
+// 2. Swagger / OpenAPI Documentation
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+
+// Serve OpenAPI JSON definition
+app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+});
+
+// Serve interactive Swagger UI documentation dashboard
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'Mining Inventory API Docs',
+}));
+
+/**
+ * @openapi
+ * /api/health:
+ *   get:
+ *     summary: System Health Check
+ *     description: Returns the health status of the Mining Inventory API.
+ *     tags:
+ *       - System
+ *     responses:
+ *       200:
+ *         description: API is operational and healthy.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: UP
+ *                 message:
+ *                   type: string
+ *                   example: Mining Inventory API is healthy
+ */
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: "UP", message: "Mining Inventory API is healthy" });
 });
