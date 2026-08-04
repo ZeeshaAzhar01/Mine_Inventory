@@ -1,3 +1,5 @@
+const { logger } = require('../config/logger');
+
 /**
  * Centralized global error handling middleware for Express.
  * Catches all operational and unexpected errors, formatting them into standardized JSON.
@@ -42,14 +44,17 @@ const errorHandler = (err, req, res, next) => {
     message = "Your token has expired. Please log in again.";
   }
 
-  // 4. Log server errors (500s) for monitoring without leaking stack traces to clients
+  // 4. Log server errors (500s) to Winston file and console transports
   if (statusCode >= 500) {
-    console.error("💥 SERVER ERROR:", {
-      timestamp: new Date().toISOString(),
-      path: req.originalUrl,
+    logger.error(`Unhandled Server Error: ${err.message} [${req.method} ${req.originalUrl}]`, {
+      stack: err.stack,
+      url: req.originalUrl,
       method: req.method,
-      error: err.stack || err
+      ip: req.ip,
+      body: req.body,
     });
+  } else {
+    logger.warn(`Operational Warning (${statusCode}): ${message} [${req.method} ${req.originalUrl}]`);
   }
 
   // 5. Send standardized JSON response

@@ -3,6 +3,10 @@ const express = require("express");
 const app = express();
 
 // 1. Middlewares (Must come before routes!)
+// HTTP Request Logging via Morgan & Winston
+const morganMiddleware = require("./middleware/morgan.middleware");
+app.use(morganMiddleware);
+
 // This is required to parse req.body as JSON
 app.use(express.json());
 
