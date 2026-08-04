@@ -1,7 +1,7 @@
 // controllers/auth.controller.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const prisma = require('../prismaClient');
+const prisma = require('../config/prisma');
 
 // Controller function to handle user registration
 const registerUser = async (req, res) => {

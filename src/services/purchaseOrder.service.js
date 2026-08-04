@@ -24,23 +24,26 @@ const createPurchaseOrder = async (supplierId, itemId, qty) => {
   const itc_amount = itcAmountPaise / 100;
   const total_amount = totalAmountPaise / 100;
 
-  // 3. Create the PO, logging all exact financial details 
-  const purchaseOrder = await prisma.purchaseOrder.create({
-    data: {
-      supplier_id: supplierId,
-      item_id: itemId,
-      qty: qty,
-      base_price: item.unit_price, 
-      subtotal: subtotal,
-      itc_amount: itc_amount,
-      total_amount: total_amount
-    }
-  });
+  // 3. ATOMIC TRANSACTION: Create the PO and increment stock simultaneously
+  const purchaseOrder = await prisma.$transaction(async (tx) => {
+    const newPO = await tx.purchaseOrder.create({
+      data: {
+        supplier_id: supplierId,
+        item_id: itemId,
+        qty: qty,
+        base_price: item.unit_price, 
+        subtotal: subtotal,
+        itc_amount: itc_amount,
+        total_amount: total_amount
+      }
+    });
 
-  // 4. Update the physical stock quantity
-  await prisma.inventoryItem.update({
-    where: { id: itemId },
-    data: { stock_qty: { increment: qty } }
+    await tx.inventoryItem.update({
+      where: { id: itemId },
+      data: { stock_qty: { increment: qty } }
+    });
+
+    return newPO;
   });
 
   return purchaseOrder;

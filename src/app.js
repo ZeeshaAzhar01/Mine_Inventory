@@ -30,5 +30,14 @@ app.use('/api/purchase-orders', poRoutes);
 const requisitionRoutes = require('./routes/requisition.routes');
 app.use('/api/requisitions', requisitionRoutes);
 
+//report routes (Day 20 Analytics)
+const reportRoutes = require('./routes/report.routes');
+app.use('/api/reports', reportRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: "UP", message: "Mining Inventory API is healthy" });
+});
+
 // 4. Export the configured app
 module.exports = app;
