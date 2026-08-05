@@ -1,13 +1,52 @@
 const express = require("express");
+const helmet = require("helmet");
+const cors = require("cors");
 
 const app = express();
 
-// 1. Middlewares (Must come before routes!)
+// 1. Security & Infrastructure Middlewares (Must come before routes!)
+
+// Security Headers via Helmet
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: ["'self'", "data:", "https:"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// Cross-Origin Resource Sharing (CORS)
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+  : ['*'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS policy: Not allowed by CORS origin restriction'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  })
+);
+
 // HTTP Request Logging via Morgan & Winston
 const morganMiddleware = require("./middleware/morgan.middleware");
 app.use(morganMiddleware);
 
-// This is required to parse req.body as JSON
+// Body Parser - parse req.body as JSON
 app.use(express.json());
 
 // 2. Import Routes

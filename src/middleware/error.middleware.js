@@ -44,7 +44,14 @@ const errorHandler = (err, req, res, next) => {
     message = "Your token has expired. Please log in again.";
   }
 
-  // 4. Log server errors (500s) to Winston file and console transports
+  // 4. Handle CORS policy violation errors
+  if (err.message && err.message.startsWith('CORS policy:')) {
+    statusCode = 403;
+    status = 'fail';
+    message = err.message;
+  }
+
+  // 5. Log server errors (500s) to Winston file and console transports
   if (statusCode >= 500) {
     logger.error(`Unhandled Server Error: ${err.message} [${req.method} ${req.originalUrl}]`, {
       stack: err.stack,
@@ -53,11 +60,16 @@ const errorHandler = (err, req, res, next) => {
       ip: req.ip,
       body: req.body,
     });
+
+    // In production, mask non-operational 500 error details to avoid data leakage
+    if (process.env.NODE_ENV === 'production' && !err.isOperational) {
+      message = "An unexpected internal server error occurred. Please contact support.";
+    }
   } else {
     logger.warn(`Operational Warning (${statusCode}): ${message} [${req.method} ${req.originalUrl}]`);
   }
 
-  // 5. Send standardized JSON response
+  // 6. Send standardized JSON response
   res.status(statusCode).json({
     success: false,
     status,
