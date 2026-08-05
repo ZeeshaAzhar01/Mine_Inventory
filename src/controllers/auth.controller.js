@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../config/prisma');
 
 // Controller function to handle user registration
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 

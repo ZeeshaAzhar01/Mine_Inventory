@@ -1,0 +1,317 @@
+{
+  "info": {
+    "_postman_id": "8f3b6140-5e8c-4a37-b91c-mininginventory-v1",
+    "name": "Mining Inventory & Supply Chain Management API",
+    "description": "Production-grade RESTful API collection for Mining Inventory, Procurement, Requisitions & GST ITC Accounting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" },
+    { "key": "engineerToken", "value": "", "type": "string" },
+    { "key": "supplierId", "value": "", "type": "string" },
+    { "key": "itemId", "value": "", "type": "string" },
+    { "key": "requisitionId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "0. System & Documentation",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+          }
+        },
+        {
+          "name": "OpenAPI JSON Spec",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api-docs.json", "host": ["{{baseUrl}}"], "path": ["api-docs.json"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register Admin User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mine Manager Admin\",\n  \"email\": \"manager@mineinventory.com\",\n  \"password\": \"AdminSecure123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Register Site Engineer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Site Pit Engineer\",\n  \"email\": \"pit.engineer@mineinventory.com\",\n  \"password\": \"EngineerSecure123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('adminToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager@mineinventory.com\",\n  \"password\": \"AdminSecure123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login Engineer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('engineerToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pit.engineer@mineinventory.com\",\n  \"password\": \"EngineerSecure123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Users & RBAC",
+      "item": [
+        {
+          "name": "List Users (Admin / Engineer)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          }
+        },
+        {
+          "name": "Test Admin Lounge (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/admin-only", "host": ["{{baseUrl}}"], "path": ["api", "users", "admin-only"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Suppliers",
+      "item": [
+        {
+          "name": "Create Supplier (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.supplier && jsonData.supplier.id) {",
+                  "    pm.collectionVariables.set('supplierId', jsonData.supplier.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Heavy Rig Spares India Ltd\",\n  \"gst_number\": \"29ABCDE1234F2Z5\",\n  \"contact_info\": \"sales@heavyrig.com | +91-9876543210\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/suppliers", "host": ["{{baseUrl}}"], "path": ["api", "suppliers"] }
+          }
+        },
+        {
+          "name": "List Suppliers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{engineerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/suppliers", "host": ["{{baseUrl}}"], "path": ["api", "suppliers"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Inventory Items",
+      "item": [
+        {
+          "name": "Create Item (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('itemId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Excavator Hydraulic Pump HD-500\",\n  \"category\": \"Hydraulics\",\n  \"stock_qty\": 0,\n  \"min_stock_threshold\": 10,\n  \"unit_price\": 25000,\n  \"gst_rate\": 18,\n  \"supplier_id\": \"{{supplierId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/items", "host": ["{{baseUrl}}"], "path": ["api", "items"] }
+          }
+        },
+        {
+          "name": "Get Low Stock Items (Admin Only)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/items/low-stock", "host": ["{{baseUrl}}"], "path": ["api", "items", "low-stock"] }
+          }
+        },
+        {
+          "name": "Get Items (Search & Pagination)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{engineerToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/items?category=Hydraulics&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "items"],
+              "query": [
+                { "key": "category", "value": "Hydraulics" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Purchase Orders & Procurement",
+      "item": [
+        {
+          "name": "Log Incoming Shipment / Stock In (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplier_id\": \"{{supplierId}}\",\n  \"item_id\": \"{{itemId}}\",\n  \"qty\": 20\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/purchase-orders", "host": ["{{baseUrl}}"], "path": ["api", "purchase-orders"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Requisitions & Stock Deductions",
+      "item": [
+        {
+          "name": "Submit Requisition (Site Engineer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('requisitionId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{engineerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item_id\": \"{{itemId}}\",\n  \"qty\": 5\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/requisitions", "host": ["{{baseUrl}}"], "path": ["api", "requisitions"] }
+          }
+        },
+        {
+          "name": "Approve Requisition & Deduct Stock (Admin Only)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/requisitions/{{requisitionId}}/approve", "host": ["{{baseUrl}}"], "path": ["api", "requisitions", "{{requisitionId}}", "approve"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Analytics & Reports",
+      "item": [
+        {
+          "name": "Get Monthly Spend Report (Admin Only)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reports/monthly-spend", "host": ["{{baseUrl}}"], "path": ["api", "reports", "monthly-spend"] }
+          }
+        }
+      ]
+    }
+  ]
+}
