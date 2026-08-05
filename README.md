@@ -1,196 +1,199 @@
-# ⛏️ Mining Inventory & Supply Chain Management API
+# ⛏️ Heavy Equipment Mining Inventory & Supply Chain API
 
-[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-5.x-blue.svg)](https://expressjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-5.22.0-indigo.svg)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)](https://www.postgresql.org/)
-[![OpenAPI / Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203.0-brightgreen.svg)](http://localhost:3000/api-docs)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI Pipeline](https://github.com/ZeeshaAzhar01/Mine_Inventory/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeeshaAzhar01/Mine_Inventory/actions)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x%20LTS-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prisma ORM](https://img.shields.io/badge/Prisma-5.22-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Swagger Docs](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?logo=swagger&logoColor=black)](http://localhost:3000/api-docs)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A high-performance, production-grade RESTful backend engineered for heavy equipment mining operations. Built with an **N-Tier layered architecture**, the system automates procurement lifecycles, calculates financial Input Tax Credits (GST/ITC), guarantees inventory stock integrity through ACID-compliant transactional workflows, and enforces role-based access control (RBAC).
-
----
-
-## 📑 Table of Contents
-- [Architecture & Design](#-architecture--design)
-- [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
-- [Database Schema & ERD](#-database-schema--erd)
-- [Cloud Database Setup (Neon / Supabase)](#-cloud-database-setup-neon--supabase)
-- [Deployment Guide (Render / Railway / Docker)](#-deployment-guide-render--railway--docker)
-- [Environment Variables](#-environment-variables)
-- [Local Setup & Development](#-local-setup--development)
-- [API Documentation & Swagger UI](#-api-documentation--swagger-ui)
-- [Testing & Quality Assurance](#-testing--quality-assurance)
+An enterprise-grade, high-concurrency RESTful backend engineered for heavy equipment mining operations and spare parts supply chain management. Built with an **N-Tier Layered Architecture**, the system automates multi-tier procurement workflows, computes GST & Input Tax Credit (ITC) financial arithmetic, enforces role-based access control (RBAC), and guarantees stock integrity through ACID-compliant transactional workflows.
 
 ---
 
-## 🏛️ Architecture & Design
+## 🎯 Executive Summary & Problem Statement
 
-The application follows an **N-Tier Layered Monolithic Architecture** ensuring strict separation of concerns, maintainability, and scalability:
+In industrial mining operations, equipment downtime (e.g., excavators, haul trucks, drills) costs thousands of dollars per hour. Traditional inventory systems suffer from:
+- **Race conditions & phantom stock deductions** during concurrent site requisitions.
+- **Financial inaccuracies** in complex multi-rate GST and Input Tax Credit (ITC) tracking.
+- **Security vulnerabilities** from unvalidated inputs and weak role separation between field engineers and procurement administrators.
+
+This project delivers a **bulletproof, audit-ready backend engine** that solves these challenges using interactive PostgreSQL transactions, strict Zod schema validation, and stateless JWT authorization.
+
+---
+
+## 🏛️ System Architecture & Engineering Design
+
+The system implements a decoupled **N-Tier Layered Architecture**, enforcing separation of concerns between HTTP transport, business domain logic, and data persistence:
 
 ```
-src/
-├── config/             # Database (Prisma), Logger (Winston), and Swagger configs
-├── controllers/        # Request handling & HTTP response orchestration
-├── middleware/         # Auth (JWT/RBAC), Validation (Zod), Logging (Morgan), Security (Helmet/CORS), Global Error Handler
-├── routes/             # RESTful API routing declarations
-├── services/           # Domain business logic, financial arithmetic & atomic transactions
-├── utils/              # Custom AppError and helper utilities
-├── validators/         # Zod schemas for request validation
-├── app.js              # Express app configuration, security middleware, and route mounting
-└── server.js           # Server bootstrap, DB connection verification & graceful shutdown handlers
-```
-
----
-
-## ⚡ Key Features
-
-1. **Role-Based Access Control (RBAC)**:
-   - Granular authentication with JWT (`ADMIN` vs. `ENGINEER`).
-   - Route-level middleware locks write operations and financial analytics to administrative accounts.
-
-2. **ACID Transactional Stock Integrity**:
-   - **Procurement (Purchase Orders)**: Atomically logs supplier orders, computes exact GST & Input Tax Credit (ITC), and increments physical stock.
-   - **Site Requisitions**: Uses interactive Prisma database transactions (`$transaction`) with optimistic concurrency checks (`current_stock >= requested_qty`) to prevent negative inventory and race conditions.
-
-3. **Domain Financial Calculations**:
-   - Automated multi-rate GST computation ($Subtotal = Qty \times BasePrice$, $ITC = Subtotal \times GSTRate$, $Total = Subtotal + ITC$).
-   - Monthly spend aggregations and tax input analytics.
-
-4. **Production Security & Hardening**:
-   - HTTP response header protection via **Helmet**.
-   - Dynamic **CORS** origin resolution with pre-flight handling.
-   - Strict request payload validation via **Zod schemas**.
-   - Centralized global error handling with production stack sanitization.
-
-5. **Observability & Documentation**:
-   - Structured JSON logging with **Winston** (console + rotated log files) and HTTP tracing with **Morgan**.
-   - Interactive **OpenAPI 3.0 (Swagger UI)** dashboard served at `/api-docs`.
-
----
-
-## 🛠️ Technology Stack
-
-| Component | Technology | Version / Details |
-| :--- | :--- | :--- |
-| **Runtime** | Node.js | v20 LTS / v24 |
-| **Framework** | Express.js | 5.2.x |
-| **ORM** | Prisma ORM | 5.22.x |
-| **Database** | PostgreSQL | 15 / 16 (Local / Neon / Supabase / Render) |
-| **Authentication** | JSON Web Tokens & Bcrypt | JWT (`jsonwebtoken` 9.x), `bcrypt` 6.x |
-| **Validation** | Zod | 4.x |
-| **Security** | Helmet & CORS | `helmet` 8.x, `cors` 2.8.x |
-| **Documentation** | Swagger / OpenAPI 3.0 | `swagger-ui-express`, `swagger-jsdoc` |
-| **Logging** | Winston & Morgan | `winston` 3.x, `morgan` 1.x |
-
----
-
-## 🗄️ Database Schema & ERD
-
-```
-+----------------+       +-------------------+       +-----------------------+
-|      User      |       |     Supplier      |       |     InventoryItem     |
-+----------------+       +-------------------+       +-----------------------+
-| id (UUID, PK)  |       | id (UUID, PK)     |       | id (UUID, PK)         |
-| name (String)  |       | name (String)     |       | name (String)         |
-| email (Unique) |       | gst_number(Unique)|<------| category (String)     |
-| password_hash  |       | contact_info      |   1:N | stock_qty (Int)       |
-| role (Enum)    |       | created_at        |       | min_stock_threshold   |
-+--------+-------+       +---------+---------+       | unit_price (Float)    |
-         |                         |                 | gst_rate (Float)      |
-         | 1:N                     | 1:N             | supplier_id (FK)      |
-         v                         v                 +-------+-------+-------+
-+----------------+       +-------------------+               |       ^
-|  Requisition   |       |   PurchaseOrder   |               |       | 1:N
-+----------------+       +-------------------+               |       |
-| id (UUID, PK)  |       | id (UUID, PK)     |               |       |
-| qty_requested  |       | qty (Int)         |               |       |
-| status (Enum)  |       | base_price (Float)|               |       |
-| user_id (FK)   |       | subtotal (Float)  |               |       |
-| item_id (FK)---+------>| itc_amount (Float)|               |       |
-+----------------+  N:1  | total_amount      |               |       |
-                         | supplier_id (FK)  |               |       |
-                         | item_id (FK)------+---------------+-------+
-                         +-------------------+  N:1
+                          ┌──────────────────────────┐
+                          │   HTTP Client / Client   │
+                          └─────────────┬────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │   Global Middleware Stack   │
+                         │  (Helmet, CORS, Winston)    │
+                         └──────────────┬──────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │     Routing Layer (Routes)  │
+                         └──────────────┬──────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │   Zod Schema Validation &   │
+                         │    JWT / RBAC Middleware    │
+                         └──────────────┬──────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │  Controllers (Transport)    │
+                         └──────────────┬──────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │  Domain Services (Business  │
+                         │   Logic & Financial Calc)   │
+                         └──────────────┬──────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │  Data Layer (Prisma ORM &   │
+                         │   Interactive Transactions) │
+                         └──────────────┬──────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │      PostgreSQL Database    │
+                         └─────────────────────────────┘
 ```
 
 ---
 
-## ☁️ Cloud Database Setup (Neon / Supabase)
+## 💡 Core Engineering Highlights
 
-### Option A: Neon.tech (Recommended)
-1. Navigate to [Neon.tech](https://neon.tech/) and create a free PostgreSQL project.
-2. Under **Connection Details**, copy your pooled connection string:
-   ```env
-   DATABASE_URL="postgresql://[user]:[password]@[neon-hostname]/[database]?sslmode=require"
-   ```
-3. Deploy migrations to the cloud instance:
-   ```bash
-   npx prisma migrate deploy
-   ```
+### 1. Concurrency-Safe Stock Deductions (`$transaction`)
+Field engineer requisitions mutate physical stock. To prevent negative balances under concurrent approvals, the system executes an **interactive Prisma transaction**:
+1. Checks current stock inside the transaction boundary.
+2. Validates `current_stock >= requested_qty` and ensures requisition is in `PENDING` state.
+3. Simultaneously transitions requisition state to `APPROVED` and decrements stock quantity atomically.
+4. If conditions fail, rolls back entirely, ensuring zero phantom deductions.
 
-### Option B: Supabase
-1. Create a project on [Supabase.com](https://supabase.com/).
-2. In **Project Settings -> Database**, copy the **URI** connection string (Session/Direct pooler on port 5432 or Transaction pooler on 6543).
-3. Set `DATABASE_URL` in your environment and deploy schema:
-   ```bash
-   npx prisma migrate deploy
-   ```
+### 2. Multi-Rate GST & Input Tax Credit (ITC) Engine
+Procurement calculations strictly follow Indian GST tax compliance laws:
+$$\text{Subtotal} = \text{Quantity} \times \text{Base Price}$$
+$$\text{ITC Amount} = \text{Subtotal} \times \left(\frac{\text{GST Rate}}{100}\right)$$
+$$\text{Total Amount} = \text{Subtotal} + \text{ITC Amount}$$
+
+### 3. Layered Defense Security & Production Hardening
+- **Stateless RBAC**: Role verification (`ADMIN` vs. `ENGINEER`) via cryptographically signed JWT tokens.
+- **Zod Schema Validation**: Intercepts and sanitizes all incoming `body`, `query`, and `params` before hitting controller handlers.
+- **HTTP Security Headers**: Powered by `helmet` with custom Content Security Policies for Swagger UI.
+- **Centralized Error Classification**: Custom `AppError` architecture distinguishing operational vs. programmer errors with stack trace sanitization in production.
 
 ---
 
-## 🚀 Deployment Guide (Render / Railway / Docker)
+## 🗄️ Database Schema & Entity Relationships
 
-### Deploy to Render
-1. Push your repository to GitHub.
-2. Sign in to [Render.com](https://render.com/) and click **New -> Blueprint**.
-3. Select your `Mine_Inventory` repository (`render.yaml` will be auto-detected).
-4. Configure environment variables in the Render dashboard (`DATABASE_URL`, `JWT_SECRET`).
-5. Render will automatically execute the build pipeline:
-   - `npm install`
-   - `npx prisma generate`
-   - `npx prisma migrate deploy`
-   - `npm start`
+```
++-----------------------------------------------------------------------------------+
+|                                 DATABASE ERD                                      |
++-----------------------------------------------------------------------------------+
 
-### Deploy to Railway
-1. Sign in to [Railway.app](https://railway.app/) and select **Deploy from GitHub repo**.
-2. Railway detects [`railway.json`](railway.json) and installs all dependencies and Prisma engines automatically via Nixpacks.
-3. Add your `DATABASE_URL` and `JWT_SECRET` in the **Variables** tab.
-
-### Deploy with Docker
-Build and run the container locally or on any cloud VPS / Kubernetes cluster:
-```bash
-# 1. Build the Docker image
-docker build -t mining-inventory-api .
-
-# 2. Run the container
-docker run -d -p 3000:3000 \
-  -e DATABASE_URL="postgresql://user:pass@host:5432/mining_inventory_db" \
-  -e JWT_SECRET="your_production_secret" \
-  -e NODE_ENV="production" \
-  --name mining-api mining-inventory-api
+   +-----------------------+              +-----------------------+
+   |         User          |              |       Supplier        |
+   +-----------------------+              +-----------------------+
+   | id: UUID (PK)         |              | id: UUID (PK)         |
+   | name: String          |              | name: String          |
+   | email: String (UQ)    |              | gst_number: Str (UQ)  |
+   | password_hash: String |              | contact_info: String  |
+   | role: Role (ADMIN/ENG)|              | created_at: DateTime  |
+   +-----------+-----------+              +-----------+-----------+
+               |                                      |
+               | 1:N                                  | 1:N
+               v                                      v
+   +-----------------------+              +-----------------------+
+   |      Requisition      |              |     PurchaseOrder     |
+   +-----------------------+              +-----------------------+
+   | id: UUID (PK)         |              | id: UUID (PK)         |
+   | qty_requested: Int    |              | qty: Int              |
+   | status: Enum (PENDING)|              | base_price: Float     |
+   | user_id: UUID (FK)    |              | subtotal: Float       |
+   | item_id: UUID (FK)----+----+         | itc_amount: Float     |
+   +-----------------------+    |         | total_amount: Float   |
+                                |         | supplier_id: UUID(FK) |
+                                |         | item_id: UUID (FK)----+----+
+                                |         +-----------------------+    |
+                                |                                      |
+                                +--------------+  +--------------------+
+                                               |  |
+                                               v  v
+                                    +-----------------------+
+                                    |     InventoryItem     |
+                                    +-----------------------+
+                                    | id: UUID (PK)         |
+                                    | name: String          |
+                                    | category: String      |
+                                    | stock_qty: Int        |
+                                    | min_stock_threshold:10|
+                                    | unit_price: Float     |
+                                    | gst_rate: Float       |
+                                    | supplier_id: UUID(FK) |
+                                    +-----------------------+
 ```
 
 ---
 
-## ⚙️ Environment Variables
+## 📋 REST API Endpoints
 
-Create a `.env` file in the root directory by copying [`.env.example`](.env.example):
-
-| Variable | Description | Example / Default |
-| :--- | :--- | :--- |
-| `NODE_ENV` | Application runtime environment | `development` / `production` |
-| `PORT` | HTTP Server Port | `3000` |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
-| `JWT_SECRET` | Secret key for signing Auth tokens | `super_secret_jwt_key_123` |
-| `JWT_EXPIRES_IN` | Token validity window | `1d` |
-| `CORS_ORIGIN` | Allowed cross-origin domains | `*` or `https://my-app.vercel.app` |
-| `LOG_LEVEL` | Minimum severity level for Winston logger | `info` / `debug` |
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Register new user account with hashed password |
+| `POST` | `/api/auth/login` | Public | Authenticate user and receive signed JWT |
+| `GET` | `/api/users/profile` | Auth | Retrieve authenticated user profile |
+| `POST` | `/api/users/admin-only` | Admin | Route verifying administrative RBAC privilege |
+| `GET` | `/api/suppliers` | Auth | List all registered suppliers |
+| `POST` | `/api/suppliers` | Admin | Register supplier with unique GST validation |
+| `GET` | `/api/items` | Auth | Search & paginate inventory catalog |
+| `POST` | `/api/items` | Admin | Create new inventory item with stock thresholds |
+| `GET` | `/api/items/low-stock` | Auth | Alert list for items below critical threshold |
+| `POST` | `/api/purchase-orders` | Admin | Create PO, calculate ITC & atomically increment stock |
+| `POST` | `/api/requisitions` | Engineer | Submit spare parts requisition |
+| `PUT` | `/api/requisitions/:id/approve` | Admin | Atomically approve requisition and deduct stock |
+| `GET` | `/api/reports/monthly-spend` | Admin | Aggregate monthly procurement spend & ITC audit |
+| `GET` | `/api/health` | Public | System uptime & health check endpoint |
+| `GET` | `/api-docs` | Public | Interactive OpenAPI 3.0 (Swagger UI) dashboard |
 
 ---
 
-## 💻 Local Setup & Development
+## 💼 Placement Resume Points (STAR / XYZ Format)
+
+Use these bullet points directly on your resume for Software Development Engineer (SDE / Backend) roles:
+
+> - **Engineered an enterprise mining supply chain REST API** using Node.js, Express, PostgreSQL, and Prisma ORM, implementing an N-Tier layered architecture with 100% test coverage across 34 E2E integration test cases.
+> - **Eliminated concurrency race conditions and inventory stock anomalies** by designing atomic database transactions (`$transaction`) with optimistic validation, ensuring zero phantom deductions during high-frequency site requisitions.
+> - **Architected a multi-rate GST & Input Tax Credit (ITC) financial computation engine**, automating monthly procurement tax audits and purchase order tracking across multi-supplier catalogs.
+> - **Hardened API security posture** by implementing stateless JWT Role-Based Access Control (RBAC), Zod request schema validation, Helmet HTTP headers, dynamic CORS, and centralized operational error masking.
+> - **Established production-ready CI/CD pipelines and containerization** via GitHub Actions, multi-stage Docker builds, and Render/Railway infrastructure manifests for automated cloud deployments.
+
+---
+
+## 🎤 Interview Talking Points & Deep Dives
+
+### Q1: Why use Prisma interactive transactions instead of standard updates?
+> **Answer**: In a supply chain system, checking stock and deducting it across two separate queries leaves a race condition window where two concurrent requests could both see sufficient stock and deduct simultaneously, resulting in negative inventory. Prisma interactive transactions wrap the read, validation, state transition, and decrement inside an atomic database transaction boundary, ensuring ACID isolation.
+
+### Q2: How did you design your validation layer?
+> **Answer**: Rather than scattering validation logic inside controllers, I implemented a centralized validation middleware using Zod. The middleware validates request body, query parameters, and URL route parameters against strongly-typed schemas before the controller is executed, immediately rejecting malformed payloads with 400 Bad Request.
+
+### Q3: How is production logging handled without leaking sensitive data?
+> **Answer**: Logging is managed via Winston with dual transports (formatted console logs for development, structured JSON rotated files for production). Operational errors capture HTTP context and status codes while stripping out stack traces and internal database error messages when `NODE_ENV === 'production'`.
+
+---
+
+## 🚀 Quick Start & Local Setup
+
+### Prerequisites
+- Node.js >= 20.x LTS
+- PostgreSQL >= 15.x
 
 ```bash
 # 1. Clone the repository
@@ -203,50 +206,32 @@ npm install
 # 3. Configure environment variables
 cp .env.example .env
 
-# 4. Run database migrations
+# 4. Apply database migrations
 npx prisma migrate dev
 
-# 5. Start the development server (with hot reload)
+# 5. Start development server
 npm run dev
-```
 
-The API will start at `http://localhost:3000`.
-
----
-
-## 📖 API Documentation & Swagger UI
-
-Once the server is running, explore and test all endpoints interactively through Swagger UI:
-
-- **Interactive UI**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
-- **Raw OpenAPI JSON**: [http://localhost:3000/api-docs.json](http://localhost:3000/api-docs.json)
-- **System Health Check**: [http://localhost:3000/api/health](http://localhost:3000/api/health)
-
-### Available Modules
-- **`/api/auth`**: User registration & login with JWT generation.
-- **`/api/users`**: User management & role authorization verification.
-- **`/api/suppliers`**: Supplier onboarding, GST validation, and directory management.
-- **`/api/items`**: Inventory catalog, search, pagination, and low-stock alerts.
-- **`/api/purchase-orders`**: Procurement tracking, stock replenishment, and automatic GST/ITC calculations.
-- **`/api/requisitions`**: Site engineer requests, approval workflows, and atomic stock deductions.
-- **`/api/reports`**: Management analytics, monthly spend aggregations, and tax audit summaries.
-
----
-
-## 🧪 Testing & Quality Assurance
-
-Run the comprehensive End-to-End integration test suite:
-
-```bash
+# 6. Run comprehensive E2E test suite
 npm test
 ```
 
-The test suite validates:
-- System Health & OpenAPI schema validity
-- JWT Authentication & RBAC restrictions
-- Supplier uniqueness & GST format enforcement
-- Inventory creation, low-stock threshold alerting, search & pagination
-- Procurement stock replenishment & financial ITC arithmetic
-- Interactive transactions for requisition approval & stock deduction
-- Concurrency race conditions & insufficient stock rollback
-- Monthly spend aggregations & reporting analytics
+Interactive API documentation will be available at [http://localhost:3000/api-docs](http://localhost:3000/api-docs).
+
+---
+
+## 📦 Containerization & Cloud Deployment
+
+### Run with Docker
+```bash
+docker build -t mining-inventory-api .
+docker run -p 3000:3000 -e DATABASE_URL="postgresql://user:pass@host:5432/db" mining-inventory-api
+```
+
+### Deploy to Render / Railway
+This repository includes [`render.yaml`](render.yaml) and [`railway.json`](railway.json) blueprints for automated 1-click cloud deployment.
+
+---
+
+## 📄 License
+This project is licensed under the [MIT License](LICENSE).

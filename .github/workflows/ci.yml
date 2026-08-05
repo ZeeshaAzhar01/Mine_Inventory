@@ -1,0 +1,58 @@
+name: Continuous Integration & Automated Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build & E2E Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: mining_inventory_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Apply Prisma Database Migrations
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/mining_inventory_test?schema=public
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+
+      - name: Run End-to-End Test Suite
+        env:
+          NODE_ENV: test
+          PORT: 3000
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/mining_inventory_test?schema=public
+          JWT_SECRET: ci_test_super_secret_jwt_key_2026
+          JWT_EXPIRES_IN: 1d
+          CORS_ORIGIN: '*'
+          LOG_LEVEL: info
+        run: npm test
